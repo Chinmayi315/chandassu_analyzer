@@ -1,31 +1,43 @@
-# chandassu_analyzer
+# Chandassu Analyzer — API + Web Demo
 
-Project Demo
-[Click here to watch the demo video]
-https://docs.google.com/videos/d/1AmEFIFE9pW3BhE_9BGw3VcBNwltaqlgMdvl6-y86VK8/edit?usp=sharing
+Kannada poetic meter (prosody) analyzer. Classifies Kannada syllables into
+**Laghu** (short, 1 matra) and **Guru** (long, 2 matras) using rule-based
+Unicode text processing, and checks whether a 4-line poem matches the
+**Kanda Padya** matra pattern (12-20-12-20).
 
-This project is a Python-based implementation of a Kannada Chandassu (Prosody) Analyzer.
-It processes Kannada Unicode text and classifies syllables into Laghu (short) and Guru (long) based on traditional metrical rules.
-The system performs structured syllable detection and applies rule-based logic to determine the metrical pattern of the given text.
+This wraps the original notebook logic (`kanda_padya_chandassu.ipynb`) in a
+FastAPI backend with a live web UI — same algorithm, now servable as a real
+product instead of only runnable in a notebook.
 
-Features
-* Unicode normalization for accurate Kannada text handling
-* Syllable segmentation
-* Laghu and Guru classification
-* Rule-based metrical analysis
-* Structured and readable output display
+## What's new vs. the original notebook
+- Core logic extracted into `chandassu.py`, refactored to return structured
+  data instead of `print()`ing to a notebook cell
+- FastAPI backend (`main.py`) exposing:
+  - `POST /api/analyze` — single line → syllable breakdown + matra count
+  - `POST /api/check-kanda-padya` — 4 lines → per-line breakdown + verdict
+  - `GET /api/health`
+- A minimal web UI (`static/index.html`) to demo it live — type Kannada text,
+  see each syllable colored by Laghu/Guru with matra weights
 
-Technologies Used
-* Python
-* Unicode text processing
-* Rule-based algorithm design
-* Jupyter Notebook
+## Run locally
+```bash
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
+Then open http://localhost:8000
 
-Learning Outcomes
-Through this project, I gained deeper understanding of:
-* Kannada linguistic structure
-* Text preprocessing techniques
-* Algorithm implementation
-Handling complex character encoding
+## Deploy (free, same pattern as your Samvad deployment)
+1. Push this folder to a new GitHub repo (or a `webapp/` folder in the
+   existing `chandassu_analyzer` repo)
+2. Deploy to [Render](https://render.com) as a Web Service:
+   - Build command: `pip install -r requirements.txt`
+   - Start command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+3. You'll get a live URL to put in your resume/portfolio, e.g.
+   `https://chandassu-analyzer.onrender.com`
 
-Debugging real-world text processing issues
+## API example
+```bash
+curl -X POST https://your-app.onrender.com/api/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"text": "ಕನ್ನಡ"}'
+```
