@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Chandassu — Kannada Prosody Analyzer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Kannada:wght@400;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #2b241c;
+    --paper: #f2ead9;
+    --paper-deep: #e7dcc3;
+    --gold: #a9762f;
+    --gold-deep: #7c5720;
+    --laghu: #4f7d63;
+    --guru: #a4462f;
+    --line: rgba(43,36,28,0.14);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(169,118,47,0.08), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(164,70,47,0.06), transparent 40%);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    padding: 48px 20px 80px;
+  }
+  .wrap { max-width: 780px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 44px; }
+  .kn-title {
+    font-family: 'Noto Serif Kannada', serif;
+    font-size: 3.2rem;
+    font-weight: 700;
+    color: var(--gold-deep);
+    line-height: 1;
+    margin: 0 0 6px;
+  }
+  .en-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.3rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    margin: 0;
+  }
+  .subtitle {
+    font-size: 0.92rem;
+    color: rgba(43,36,28,0.65);
+    margin-top: 8px;
+  }
+  .tabs {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    margin-bottom: 28px;
+    border-bottom: 1px solid var(--line);
+  }
+  .tab {
+    padding: 10px 18px;
+    font-family: 'Fraunces', serif;
+    font-size: 0.98rem;
+    font-weight: 600;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: rgba(43,36,28,0.55);
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+  }
+  .tab.active { color: var(--gold-deep); border-bottom-color: var(--gold); }
+
+  .panel {
+    background: var(--paper-deep);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 28px;
+  }
+  .panel + .panel { margin-top: 20px; }
+  label {
+    display: block;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(43,36,28,0.6);
+    margin-bottom: 8px;
+  }
+  input[type=text], textarea {
+    width: 100%;
+    font-family: 'Noto Serif Kannada', serif;
+    font-size: 1.3rem;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    background: var(--paper);
+    color: var(--ink);
+    outline: none;
+  }
+  input[type=text]:focus, textarea:focus { border-color: var(--gold); }
+  .line-input { margin-bottom: 14px; }
+  .line-input:last-of-type { margin-bottom: 20px; }
+  button.run {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 1rem;
+    background: var(--gold-deep);
+    color: var(--paper);
+    border: none;
+    padding: 12px 26px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  button.run:hover { background: var(--ink); }
+  button.run:disabled { opacity: 0.5; cursor: default; }
+
+  .result { margin-top: 28px; }
+  .syllable-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .syll {
+    font-family: 'Noto Serif Kannada', serif;
+    font-size: 1.15rem;
+    padding: 6px 12px;
+    border-radius: 3px;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    color: #fff;
+  }
+  .syll.laghu { background: var(--laghu); }
+  .syll.guru { background: var(--guru); }
+  .syll small { font-family: 'Inter', sans-serif; font-size: 0.65rem; opacity: 0.85; }
+  .total {
+    font-family: 'Fraunces', serif;
+    font-size: 1rem;
+    margin-top: 6px;
+    color: rgba(43,36,28,0.75);
+  }
+  .total b { color: var(--gold-deep); font-size: 1.3rem; }
+
+  .verdict {
+    margin-top: 20px;
+    padding: 16px 20px;
+    border-radius: 3px;
+    font-family: 'Fraunces', serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+  }
+  .verdict.yes { background: rgba(79,125,99,0.15); color: var(--laghu); border: 1px solid var(--laghu); }
+  .verdict.no { background: rgba(164,70,47,0.12); color: var(--guru); border: 1px solid var(--guru); }
+  .pattern-row {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    color: rgba(43,36,28,0.65);
+    margin-top: 4px;
+  }
+  .legend {
+    display: flex;
+    gap: 18px;
+    justify-content: center;
+    margin-top: 40px;
+    font-size: 0.8rem;
+    color: rgba(43,36,28,0.6);
+  }
+  .legend span { display: flex; align-items: center; gap: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .err { color: var(--guru); font-size: 0.85rem; margin-top: 10px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="kn-title">ಛಂದಸ್ಸು</p>
+    <p class="en-title">Chandassu — Kannada Prosody Analyzer</p>
+    <p class="subtitle">Rule-based Laghu / Guru syllable classification for Kannada verse</p>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="single">Single Line</button>
+    <button class="tab" data-tab="kanda">Kanda Padya (4 lines)</button>
+  </div>
+
+  <div id="single-panel" class="panel">
+    <label for="single-input">Kannada text</label>
+    <input type="text" id="single-input" placeholder="ಕನ್ನಡ ಪಠ್ಯವನ್ನು ಇಲ್ಲಿ ಟೈಪ್ ಮಾಡಿ..." />
+    <div style="margin-top:16px;">
+      <button class="run" id="single-run">Analyze</button>
+    </div>
+    <div id="single-result" class="result"></div>
+  </div>
+
+  <div id="kanda-panel" class="panel" style="display:none;">
+    <label>Four lines of the poem</label>
+    <div class="line-input"><input type="text" id="k1" placeholder="Line 1" /></div>
+    <div class="line-input"><input type="text" id="k2" placeholder="Line 2" /></div>
+    <div class="line-input"><input type="text" id="k3" placeholder="Line 3" /></div>
+    <div class="line-input"><input type="text" id="k4" placeholder="Line 4" /></div>
+    <button class="run" id="kanda-run">Check Pattern</button>
+    <div id="kanda-result" class="result"></div>
+  </div>
+
+  <div class="legend">
+    <span><i class="dot" style="background:var(--laghu)"></i> Laghu (1 matra)</span>
+    <span><i class="dot" style="background:var(--guru)"></i> Guru (2 matras)</span>
+  </div>
+</div>
+
+<script>
+const API = window.location.origin;
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('single-panel').style.display = tab.dataset.tab === 'single' ? 'block' : 'none';
+    document.getElementById('kanda-panel').style.display = tab.dataset.tab === 'kanda' ? 'block' : 'none';
+  });
+});
+
+function renderSyllables(syllables) {
+  return `<div class="syllable-row">${syllables.map(s =>
+    `<span class="syll ${s.weight === 1 ? 'laghu' : 'guru'}">${s.text}<small>${s.weight}</small></span>`
+  ).join('')}</div>`;
+}
+
+document.getElementById('single-run').addEventListener('click', async () => {
+  const text = document.getElementById('single-input').value.trim();
+  const resultEl = document.getElementById('single-result');
+  if (!text) { resultEl.innerHTML = '<p class="err">Enter some Kannada text first.</p>'; return; }
+  resultEl.innerHTML = '<p class="subtitle">Analyzing…</p>';
+  try {
+    const res = await fetch(`${API}/api/analyze`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+    if (!res.ok) throw new Error('Request failed');
+    const data = await res.json();
+    resultEl.innerHTML = renderSyllables(data.syllables) +
+      `<p class="total">Total matra count: <b>${data.matra_count}</b></p>`;
+  } catch (e) {
+    resultEl.innerHTML = '<p class="err">Something went wrong. Is the API running?</p>';
+  }
+});
+
+document.getElementById('kanda-run').addEventListener('click', async () => {
+  const lines = ['k1','k2','k3','k4'].map(id => document.getElementById(id).value.trim());
+  const resultEl = document.getElementById('kanda-result');
+  if (lines.some(l => !l)) { resultEl.innerHTML = '<p class="err">Fill in all 4 lines.</p>'; return; }
+  resultEl.innerHTML = '<p class="subtitle">Analyzing…</p>';
+  try {
+    const res = await fetch(`${API}/api/check-kanda-padya`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lines })
+    });
+    if (!res.ok) throw new Error('Request failed');
+    const data = await res.json();
+    let html = data.lines.map((l, i) =>
+      `<p class="subtitle" style="margin-bottom:4px;">Line ${i+1} — ${l.matra_count} matras</p>` + renderSyllables(l.syllables)
+    ).join('');
+    html += `<div class="verdict ${data.is_kanda_padya ? 'yes' : 'no'}">
+      ${data.is_kanda_padya ? '✓ This is a Kanda Padya' : '✗ This is NOT a Kanda Padya'}
+    </div>
+    <p class="pattern-row">Counts: [${data.matra_counts.join(', ')}] — Expected: [${data.expected_pattern.join(', ')}]</p>`;
+    resultEl.innerHTML = html;
+  } catch (e) {
+    resultEl.innerHTML = '<p class="err">Something went wrong. Is the API running?</p>';
+  }
+});
+</script>
+</body>
+</html>
